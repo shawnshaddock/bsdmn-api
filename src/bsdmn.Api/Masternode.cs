@@ -15,7 +15,6 @@ namespace bsdmn.Api
 
         public string Id { get; set; }
         public string Address { get; set; }
-        public int Index { get; set; }
         public string Status { get; set; }
         public int Protocol { get; set; }
         public string PubKey { get; set; }
@@ -30,7 +29,7 @@ namespace bsdmn.Api
             {
                 var addressIndexs = new Dictionary<string, int>();
 
-                //full - Print info in format 'status protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)
+                //full - Print info in format 'status protocol pubkey address lastseen activeseconds' (can be additionally filtered, partial match)
                 var result = await BitSendCli.RunAsync("masternodelist full");
                 var reader = new JsonTextReader(new StringReader(result));
 
@@ -39,29 +38,29 @@ namespace bsdmn.Api
                     if (reader.TokenType == JsonToken.PropertyName)
                     {
                         var masternode = new Masternode();
-                        masternode.Address = ((string) reader.Value).Trim();
-                        if (addressIndexs.TryGetValue(masternode.Address, out var index))
-                        {
-                            index++;
-                        }
-
-                        masternode.Index = index;
-                        addressIndexs[masternode.Address] = index;
-
-                        masternode.Id = GetMasternodeId(masternode.Address, masternode.Index);
+                        masternode.Vin = ((string) reader.Value).Trim();
 
                         var info = reader.ReadAsString();
                         var values = info.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         masternode.Status = values[0];
                         masternode.Protocol = int.Parse(values[1]);
                         masternode.PubKey = values[2];
-                        masternode.Vin = values[3];
+                        masternode.Address = values[3];
 
                         var lastSeenSeconds = int.Parse(values[4]);
                         masternode.LastSeen = Unix.GetTimestampFromSeconds(lastSeenSeconds);
 
                         var activeseconds = int.Parse(values[5]);
                         masternode.ActiveDuration = TimeSpan.FromSeconds(activeseconds);
+
+                        if (addressIndexs.TryGetValue(masternode.Address, out var index))
+                        {
+                            index++;
+                        }
+
+                        addressIndexs[masternode.Address] = index;
+
+                        masternode.Id = GetMasternodeId(masternode.Address, index);
 
                         All[masternode.Id] = masternode;
                     }
@@ -101,27 +100,33 @@ namespace bsdmn.Api
         }
 
         [JsonRpcMethod]
-        public static Task<List<Masternode>> ListAsync(string status = null)
+        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null)
         {
-            var masternodes = All.Values.OrderBy(mn => mn.Rank).ToList();
+            var masternodes = All.Values.AsEnumerable();
 
             if (status != null) masternodes = masternodes.Where(mn => mn.Status == status).ToList();
+            if (protocol != null) masternodes = masternodes.Where(mn => mn.Protocol == protocol.Value);
 
-            return Task.FromResult(masternodes);
+            return Task.FromResult(masternodes.ToList());
         }
 
         [JsonRpcMethod]
-        public static Task<Masternode> GetAsync(string pubKey)
+        public static Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string id = null)
         {
-            var masternode = All.Values.FirstOrDefault(mn => mn.PubKey == pubKey);
+            var masternode = All.Values
+                .Where(mn => address == null || mn.Address == address)
+                .Where(mn => vin == null || mn.Vin == vin)
+                .Where(mn => pubkey == null || mn.PubKey == pubkey)
+                .Where(mn => id == null || mn.Id == id)
+                .FirstOrDefault();
 
             return Task.FromResult(masternode);
         }
 
         [JsonRpcMethod]
-        public static async Task<int> GetCountAsync(string status = null)
+        public static async Task<int> GetCountAsync(string status = null, int? protocol = null)
         {
-            var masternodes = await ListAsync(status);
+            var masternodes = await ListAsync(status, protocol);
             return masternodes.Count;
         }
     }
