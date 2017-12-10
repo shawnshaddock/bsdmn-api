@@ -113,11 +113,12 @@ namespace bsdmn.Api
         [JsonRpcMethod]
         public static Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string id = null)
         {
+            // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
             var masternode = All.Values
-                .Where(mn => address == null || mn.Address == address)
-                .Where(mn => vin == null || mn.Vin == vin)
-                .Where(mn => pubkey == null || mn.PubKey == pubkey)
-                .Where(mn => id == null || mn.Id == id)
+                .Where(mn => address == null || mn.Address.StartsWith(address))
+                .Where(mn => vin == null || mn.Vin.StartsWith(vin))
+                .Where(mn => pubkey == null || mn.PubKey.StartsWith(pubkey))
+                .Where(mn => id == null || mn.Id.StartsWith(id))
                 .FirstOrDefault();
 
             return Task.FromResult(masternode);
