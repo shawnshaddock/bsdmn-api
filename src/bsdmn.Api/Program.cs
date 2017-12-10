@@ -13,8 +13,14 @@ namespace bsdmn.Api
     {
         static void Main(string[] args)
         {
+            string address = null;
+
+#if !DEBUG
+            address = "http://localhost:80/";
+#endif
+
             Masternode.Poll();
-            JsonRpc.Start();
+            JsonRpc.Start(address);
             Console.ReadLine();
         }
     }
