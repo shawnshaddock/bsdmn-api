@@ -16,7 +16,7 @@ namespace bsdmn.Api
             string address = null;
 
 #if !DEBUG
-            address = "http://localhost:80/";
+            address = "http://35.227.29.160:80/";
 #endif
 
             Masternode.Poll();
