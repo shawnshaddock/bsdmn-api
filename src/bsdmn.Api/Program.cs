@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using HttpJsonRpc;
-using Newtonsoft.Json;
 
 namespace bsdmn.Api
 {
@@ -13,12 +8,6 @@ namespace bsdmn.Api
     {
         static void Main(string[] args)
         {
-            string address = null;
-
-#if !DEBUG
-            address = "http://*:80/";
-#endif
-
             Masternode.Poll();
 
             JsonRpc.OnReceivedRequest(c =>
@@ -28,7 +17,7 @@ namespace bsdmn.Api
                 return Task.CompletedTask;
             });
 
-            JsonRpc.Start(address);
+            JsonRpc.Start("http://*:5000");
             Console.ReadLine();
         }
     }
