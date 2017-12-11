@@ -27,67 +27,74 @@ namespace bsdmn.Api
         {
             while (true)
             {
-                var addressIndexs = new Dictionary<string, int>();
-
-                //full - Print info in format 'status protocol pubkey address lastseen activeseconds' (can be additionally filtered, partial match)
-                var result = await BitSendCli.RunAsync("masternodelist full");
-                var reader = new JsonTextReader(new StringReader(result));
-
-                while (reader.Read())
+                try
                 {
-                    if (reader.TokenType == JsonToken.PropertyName)
+                    var addressIndexs = new Dictionary<string, int>();
+
+                    //full - Print info in format 'status protocol pubkey address lastseen activeseconds' (can be additionally filtered, partial match)
+                    var result = await BitSendCli.RunAsync("masternodelist full");
+                    var reader = new JsonTextReader(new StringReader(result));
+
+                    while (reader.Read())
                     {
-                        var masternode = new Masternode();
-                        masternode.Vin = ((string) reader.Value).Trim();
-
-                        var info = reader.ReadAsString();
-                        var values = info.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        masternode.Status = values[0];
-                        masternode.Protocol = int.Parse(values[1]);
-                        masternode.PubKey = values[2];
-                        masternode.Address = values[3];
-
-                        var lastSeenSeconds = int.Parse(values[4]);
-                        masternode.LastSeen = Unix.GetTimestampFromSeconds(lastSeenSeconds);
-
-                        var activeseconds = int.Parse(values[5]);
-                        masternode.ActiveDuration = TimeSpan.FromSeconds(activeseconds);
-
-                        if (addressIndexs.TryGetValue(masternode.Address, out var index))
+                        if (reader.TokenType == JsonToken.PropertyName)
                         {
-                            index++;
+                            var masternode = new Masternode();
+                            masternode.Vin = ((string)reader.Value).Trim();
+
+                            var info = reader.ReadAsString();
+                            var values = info.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            masternode.Status = values[0];
+                            masternode.Protocol = int.Parse(values[1]);
+                            masternode.PubKey = values[2];
+                            masternode.Address = values[3];
+
+                            var lastSeenSeconds = int.Parse(values[4]);
+                            masternode.LastSeen = Unix.GetTimestampFromSeconds(lastSeenSeconds);
+
+                            var activeseconds = int.Parse(values[5]);
+                            masternode.ActiveDuration = TimeSpan.FromSeconds(activeseconds);
+
+                            if (addressIndexs.TryGetValue(masternode.Address, out var index))
+                            {
+                                index++;
+                            }
+
+                            addressIndexs[masternode.Address] = index;
+
+                            masternode.Id = GetMasternodeId(masternode.Address, index);
+
+                            All[masternode.Id] = masternode;
                         }
+                    }
 
-                        addressIndexs[masternode.Address] = index;
+                    //ranks
+                    result = await BitSendCli.RunAsync("masternodelist rank");
+                    reader = new JsonTextReader(new StringReader(result));
+                    addressIndexs = new Dictionary<string, int>();
 
-                        masternode.Id = GetMasternodeId(masternode.Address, index);
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonToken.PropertyName)
+                        {
+                            var address = (string)reader.Value;
+                            if (addressIndexs.TryGetValue(address, out var index))
+                            {
+                                index++;
+                            }
 
-                        All[masternode.Id] = masternode;
+                            addressIndexs[address] = index;
+
+                            var id = GetMasternodeId(address, index);
+                            var rank = reader.ReadAsInt32() ?? 0;
+
+                            if (All.TryGetValue(id, out var masternode)) masternode.Rank = rank;
+                        }
                     }
                 }
-
-                //ranks
-                result = await BitSendCli.RunAsync("masternodelist rank");
-                reader = new JsonTextReader(new StringReader(result));
-                addressIndexs = new Dictionary<string, int>();
-
-                while (reader.Read())
+                catch (Exception e)
                 {
-                    if (reader.TokenType == JsonToken.PropertyName)
-                    {
-                        var address = (string)reader.Value;
-                        if (addressIndexs.TryGetValue(address, out var index))
-                        {
-                            index++;
-                        }
-
-                        addressIndexs[address] = index;
-
-                        var id = GetMasternodeId(address, index);
-                        var rank = reader.ReadAsInt32() ?? 0;
-
-                        if (All.TryGetValue(id, out var masternode)) masternode.Rank = rank;
-                    }
+                    Console.WriteLine(e);
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(2));
