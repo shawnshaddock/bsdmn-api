@@ -6,7 +6,7 @@ The bsdmn api implements the JSON-RPC 2.0 spec over HTTP. It accepts POST with a
 # Sample using curl
 **List masternodes**
 
-`curl -X POST -H "Content-Type: application/json" -d '{"method": "masternode.list", "params": {"status": "ENABLED"}}' http://api.bsdmn.info/`
+`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.list\", \"params\": {\"status\": \"ENABLED\"}}" http://api.bsdmn.info/`
 
 Response:
 
@@ -42,7 +42,7 @@ Available params: "status", "protocol"
 
 **Get specific masternode**
 
-`curl -X POST -H "Content-Type: application/json" -d '{"method": "masternode.get", "params": {"address": "66.70.142.214"}}' http://api.bsdmn.info/`
+`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.get\", \"params\": {\"address\": \"66.70.142.214\"}}" http://api.bsdmn.info/`
 
 Response:
 
@@ -67,7 +67,7 @@ Available params: "address", "vin", "pubkey", "id"
 
 **Get masternode count**
 
-`curl -X POST -H "Content-Type: application/json" -d '{"method": "masternode.getcount", "params": {}}' http://api.bsdmn.info/`
+`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.getcount\", \"params\": {}}" http://api.bsdmn.info/`
 
 Response:
 
@@ -82,7 +82,7 @@ Available params: "status", "protocol"
 
 **Get donate address :)**
 
-`curl -X POST -H "Content-Type: application/json" -d '{"method": "wallet.getdonateaddress", "params": {}}' http://api.bsdmn.info/`
+`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"wallet.getdonateaddress\", \"params\": {}}" http://api.bsdmn.info/`
 
 Response:
 
