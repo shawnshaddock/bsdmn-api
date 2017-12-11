@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HttpJsonRpc" Version="1.0.18-beta" />
+    <PackageReference Include="HttpJsonRpc" Version="1.0.19" />
   </ItemGroup>
 
 </Project>
