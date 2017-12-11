@@ -106,7 +106,7 @@ namespace bsdmn.Api
             return $"{address}-{index}";
         }
 
-        [JsonRpcMethod]
+        [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status and protocol.")]
         public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null)
         {
             var masternodes = All.Values.AsEnumerable();
@@ -117,7 +117,7 @@ namespace bsdmn.Api
             return Task.FromResult(masternodes.ToList());
         }
 
-        [JsonRpcMethod]
+        [JsonRpcMethod(Description = "Gets a single masternode by address, vin, pubkey, or id. If multiple masternodes match returns the first one.")]
         public static Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string id = null)
         {
             // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
@@ -131,7 +131,7 @@ namespace bsdmn.Api
             return Task.FromResult(masternode);
         }
 
-        [JsonRpcMethod]
+        [JsonRpcMethod(Description = "Returns the total count of masternodes. Supports filtering by status and protocol.")]
         public static async Task<int> GetCountAsync(string status = null, int? protocol = null)
         {
             var masternodes = await ListAsync(status, protocol);

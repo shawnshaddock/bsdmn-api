@@ -21,7 +21,12 @@ namespace bsdmn.Api
                 return Task.CompletedTask;
             });
 
-            JsonRpc.Start("http://*:5000");
+            var address = "http://*:5000";
+#if DEBUG
+            address = "http://localhost:5000/";
+#endif
+
+            JsonRpc.Start(address);
 
             Console.CancelKeyPress += (sender, eventArgs) => ResetEvent.Set();
             ResetEvent.WaitOne();
