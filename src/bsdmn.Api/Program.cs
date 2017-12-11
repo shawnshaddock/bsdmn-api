@@ -20,6 +20,14 @@ namespace bsdmn.Api
 #endif
 
             Masternode.Poll();
+
+            JsonRpc.OnReceivedRequest(c =>
+            {
+                Console.WriteLine($"method: {c.Request?.Method} params: {c.Request?.Params}");
+
+                return Task.CompletedTask;
+            });
+
             JsonRpc.Start(address);
             Console.ReadLine();
         }
