@@ -15,6 +15,8 @@ namespace bsdmn.Api
 
         public string NodeId => $"{Vin}-{Index}";
         public string Address { get; set; }
+        public string IP { get; set; }
+        public int Port { get; set; }
         public string Status { get; set; }
         public int Protocol { get; set; }
         public string PubKey { get; set; }
@@ -63,7 +65,15 @@ namespace bsdmn.Api
                             masternode.Status = values[0];
                             masternode.Protocol = int.Parse(values[1]);
                             masternode.PubKey = values[2];
-                            masternode.Address = values[3];
+
+                            var address = values[3];
+                            masternode.Address = address;
+                            var portIndex = address.LastIndexOf(':');
+                            if (portIndex > -1)
+                            {
+                                masternode.IP = address.Substring(0, portIndex);
+                                masternode.Port = int.Parse(address.Substring(portIndex + 1));
+                            }
 
                             var lastSeenSeconds = int.Parse(values[4]);
                             masternode.LastSeen = Unix.GetTimestampFromSeconds(lastSeenSeconds);
