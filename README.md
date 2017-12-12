@@ -3,8 +3,12 @@ HTTP JSON-RPC API for retrieving BitSend masternode info.
 
 The bsdmn api implements the JSON-RPC 2.0 spec over HTTP. It accepts POST with a JSON request in the body.
 
-# Sample using curl
+# Samples
 **List masternodes**
+
+`http://api.bsdmn.info/?method=masternode.list&status=ENABLED`
+
+or
 
 `curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.list\", \"params\": {\"status\": \"ENABLED\"}}" http://api.bsdmn.info/`
 
@@ -42,6 +46,10 @@ Available params: "status", "protocol"
 
 **Get specific masternode**
 
+`http://api.bsdmn.info/?method=masternode.get&address=66.70.142.214`
+
+or
+
 `curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.get\", \"params\": {\"address\": \"66.70.142.214\"}}" http://api.bsdmn.info/`
 
 Response:
@@ -67,6 +75,10 @@ Available params: "address", "vin", "pubkey", "nodeId"
 
 **Get masternode count**
 
+`http://api.bsdmn.info/?method=masternode.getcount`
+
+or
+
 `curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.getcount\", \"params\": {}}" http://api.bsdmn.info/`
 
 Response:
@@ -81,6 +93,10 @@ Response:
 Available params: "status", "protocol"
 
 **Get donate address :)**
+
+`http://api.bsdmn.info/?method=wallet.getdonateaddress`
+
+or
 
 `curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"wallet.getdonateaddress\", \"params\": {}}" http://api.bsdmn.info/`
 
