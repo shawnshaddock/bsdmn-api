@@ -13,7 +13,7 @@ namespace bsdmn.Api
     {
         private static ConcurrentDictionary<string, Masternode>  All { get; } = new ConcurrentDictionary<string, Masternode>();
 
-        public string Id => $"{Vin}-{Index}";
+        public string NodeId => $"{Vin}-{Index}";
         public string Address { get; set; }
         public string Status { get; set; }
         public int Protocol { get; set; }
@@ -86,7 +86,7 @@ namespace bsdmn.Api
                             var addressRanks = ranks.Where(r => r.address == masternode.Address).ToList();
                             if (addressRanks.Count > addressIndex) masternode.Rank = addressRanks[addressIndex].rank;
 
-                            All[masternode.Id] = masternode;
+                            All[masternode.NodeId] = masternode;
                         }
                     }
                 }
@@ -111,14 +111,14 @@ namespace bsdmn.Api
         }
 
         [JsonRpcMethod(Description = "Gets a single masternode by address, vin, pubkey, or id. If multiple masternodes match returns the first one.")]
-        public static Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string id = null)
+        public static Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string nodeId = null)
         {
             // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
             var masternode = All.Values
                 .Where(mn => address == null || mn.Address.StartsWith(address))
                 .Where(mn => vin == null || mn.Vin.StartsWith(vin))
                 .Where(mn => pubkey == null || mn.PubKey.StartsWith(pubkey))
-                .Where(mn => id == null || mn.Id.StartsWith(id))
+                .Where(mn => nodeId == null || mn.NodeId.StartsWith(nodeId))
                 .FirstOrDefault();
 
             return Task.FromResult(masternode);
