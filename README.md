@@ -63,7 +63,7 @@ Response:
 }
 ```
 
-Available params: "address", "vin", "pubkey", "id"
+Available params: "address", "vin", "pubkey", "nodeId"
 
 **Get masternode count**
 
