@@ -79,7 +79,7 @@ Available params: "address", "vin", "pubkey", "nodeId"
 
 or
 
-`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.getcount\", \"params\": {}}" http://api.bsdmn.info/`
+`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"masternode.getcount\"}" http://api.bsdmn.info/`
 
 Response:
 
@@ -98,7 +98,7 @@ Available params: "status", "protocol"
 
 or
 
-`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"wallet.getdonateaddress\", \"params\": {}}" http://api.bsdmn.info/`
+`curl -X POST -H "Content-Type: application/json" -d "{\"method\": \"wallet.getdonateaddress\"}" http://api.bsdmn.info/`
 
 Response:
 
