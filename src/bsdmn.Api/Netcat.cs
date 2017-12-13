@@ -5,7 +5,7 @@ namespace bsdmn.Api
 {
     public static class Netcat
     {
-        public static async Task<bool> CanConnectAsync(string ip, int port)
+        public static async Task<string> TestConnectionAsync(string ip, int port)
         {
             var p = new Process();
             p.StartInfo.FileName = "nc";
@@ -15,7 +15,7 @@ namespace bsdmn.Api
 
             var result = await p.StandardOutput.ReadToEndAsync();
 
-            return result.StartsWith("Connection");
+            return result;
         }
     }
 }
