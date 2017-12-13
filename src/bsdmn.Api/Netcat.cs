@@ -15,7 +15,7 @@ namespace bsdmn.Api
 
             var result = await p.StandardOutput.ReadToEndAsync();
 
-            return result.Contains("succeeded!");
+            return result.StartsWith("Connection");
         }
     }
 }
