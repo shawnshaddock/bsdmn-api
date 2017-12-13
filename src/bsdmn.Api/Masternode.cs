@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using HttpJsonRpc;
 using Newtonsoft.Json;
@@ -25,6 +26,7 @@ namespace bsdmn.Api
         public DateTime LastSeen { get; set; }
         public TimeSpan ActiveDuration { get; set; }
         public int Rank { get; set; }
+        public decimal? Balance { get; set; }
         
         public static async void Poll()
         {
@@ -130,7 +132,7 @@ namespace bsdmn.Api
         }
 
         [JsonRpcMethod(Description = "Gets a single masternode by address, vin, pubkey, or id. If multiple masternodes match returns the first one.")]
-        public static Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string nodeId = null)
+        public static async Task<Masternode> GetAsync(string address = null, string vin = null, string pubkey = null, string nodeId = null)
         {
             // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
             var masternode = All.Values
@@ -140,7 +142,12 @@ namespace bsdmn.Api
                 .Where(mn => nodeId == null || mn.NodeId.StartsWith(nodeId))
                 .FirstOrDefault();
 
-            return Task.FromResult(masternode);
+            if (masternode != null)
+            {
+                masternode.Balance = await Cryptoid.GetBalance(masternode.PubKey);
+            }
+
+            return masternode;
         }
 
         [JsonRpcMethod(Description = "Returns the total count of masternodes. Supports filtering by status and protocol.")]
