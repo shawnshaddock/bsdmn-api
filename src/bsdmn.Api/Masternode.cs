@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using HttpJsonRpc;
 using Newtonsoft.Json;
@@ -24,7 +23,8 @@ namespace bsdmn.Api
         public string Vin { get; set; }
         public int Index { get; set; }
         public DateTime LastSeen { get; set; }
-        public TimeSpan ActiveDuration { get; set; }
+        public int ActiveSeconds { get; set; }
+        public string ActiveDuration { get; set; }
         public int Rank { get; set; }
         public decimal? Balance { get; set; }
         
@@ -81,8 +81,9 @@ namespace bsdmn.Api
                             var lastSeenSeconds = int.Parse(values[4]);
                             masternode.LastSeen = Unix.GetTimestampFromSeconds(lastSeenSeconds);
 
-                            var activeseconds = int.Parse(values[5]);
-                            masternode.ActiveDuration = TimeSpan.FromSeconds(activeseconds);
+                            masternode.ActiveSeconds = int.Parse(values[5]);
+                            var activeDuration = TimeSpan.FromSeconds(masternode.ActiveSeconds);
+                            masternode.ActiveDuration = $"{activeDuration:%d} days {activeDuration:hh} hours {activeDuration:mm} minutes {activeDuration:ss} seconds";
 
                             if (vinIndexes.TryGetValue(masternode.Vin, out var vinIndex))
                             {
