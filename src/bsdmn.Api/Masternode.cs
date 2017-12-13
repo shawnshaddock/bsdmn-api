@@ -13,21 +13,22 @@ namespace bsdmn.Api
     {
         private static ConcurrentDictionary<string, Masternode>  All { get; } = new ConcurrentDictionary<string, Masternode>();
 
-        public string NodeId => $"{Vin}-{Index}";
+        public string NodeId { get; set; }
+        public string Vin { get; set; }
+        public int VinIndex { get; set; }
         public string Address { get; set; }
         public string IP { get; set; }
         public int Port { get; set; }
         public string Status { get; set; }
         public int Protocol { get; set; }
         public string PubKey { get; set; }
-        public string Vin { get; set; }
-        public int Index { get; set; }
         public DateTime LastSeen { get; set; }
         public int ActiveSeconds { get; set; }
         public string ActiveDuration { get; set; }
         public int Rank { get; set; }
         public decimal? Balance { get; set; }
         public string ConnectionTest { get; set; }
+        public DateTime LastRefresh { get; set; }
 
         public static async void Poll()
         {
@@ -45,6 +46,7 @@ namespace bsdmn.Api
                     var ranks = new List<(string address, int rank)>();
                     var vinIndexes = new Dictionary<string, int>();
                     var addressIndexes = new Dictionary<string, int>();
+                    var nodeIds = new HashSet<string>();
 
                     while (rankReader.Read())
                     {
@@ -60,8 +62,25 @@ namespace bsdmn.Api
                     {
                         if (fullReader.TokenType == JsonToken.PropertyName)
                         {
-                            var masternode = new Masternode();
-                            masternode.Vin = ((string) fullReader.Value).Trim();
+                            var vin = ((string)fullReader.Value).Trim();
+
+                            if (vinIndexes.TryGetValue(vin, out var vinIndex))
+                            {
+                                vinIndex++;
+                            }
+
+                            var nodeId = $"{vin}-{vinIndex}";
+                            nodeIds.Add(nodeId);
+
+                            if (!All.TryGetValue(nodeId, out var masternode))
+                            {
+                                masternode = new Masternode
+                                {
+                                    NodeId = nodeId,
+                                    Vin = vin,
+                                    VinIndex = vinIndex
+                                };
+                            }
 
                             var info = fullReader.ReadAsString();
                             var values = info.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -86,13 +105,8 @@ namespace bsdmn.Api
                             var activeDuration = TimeSpan.FromSeconds(masternode.ActiveSeconds);
                             masternode.ActiveDuration = $"{activeDuration:%d} days {activeDuration:hh} hours {activeDuration:mm} minutes {activeDuration:ss} seconds";
 
-                            if (vinIndexes.TryGetValue(masternode.Vin, out var vinIndex))
-                            {
-                                vinIndex++;
-                            }
-
                             vinIndexes[masternode.Vin] = vinIndex;
-                            masternode.Index = vinIndex;
+                            masternode.VinIndex = vinIndex;
 
                             if (addressIndexes.TryGetValue(masternode.Address, out var addressIndex))
                             {
@@ -103,8 +117,16 @@ namespace bsdmn.Api
                             var addressRanks = ranks.Where(r => r.address == masternode.Address).ToList();
                             if (addressRanks.Count > addressIndex) masternode.Rank = addressRanks[addressIndex].rank;
 
+                            masternode.LastRefresh = DateTime.UtcNow;
+
                             All[masternode.NodeId] = masternode;
                         }
+                    }
+
+                    var missingIds = All.Keys.Where(k => !nodeIds.Contains(k)).ToList();
+                    foreach (var missingId in missingIds)
+                    {
+                        All.TryRemove(missingId, out var _);
                     }
                 }
                 catch (Exception e)
