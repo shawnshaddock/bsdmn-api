@@ -164,7 +164,16 @@ namespace bsdmn.Api
 
             if (masternode != null)
             {
-                masternode.Balance = await Cryptoid.GetBalance(masternode.PubKey);
+                masternode.Balance = null;
+
+                try
+                {
+                    masternode.Balance = await Cryptoid.GetBalance(masternode.PubKey);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
 
             return masternode;
