@@ -25,18 +25,18 @@ namespace bsdmn.Api
         public DateTime LastSeen { get; set; }
         public TimeSpan ActiveDuration { get; set; }
         public int Rank { get; set; }
-
+        
         public static async void Poll()
         {
             while (true)
             {
                 try
                 {
-                    //full - Print info in format 'status protocol pubkey address lastseen activeseconds' (can be additionally filtered, partial match)
+                    //full
                     var fullResult = await BitSendCli.RunAsync("masternodelist full");
                     var fullReader = new JsonTextReader(new StringReader(fullResult));
 
-                    //ranks
+                    //rank
                     var rankResult = await BitSendCli.RunAsync("masternodelist rank");
                     var rankReader = new JsonTextReader(new StringReader(rankResult));
                     var ranks = new List<(string address, int rank)>();
@@ -69,6 +69,7 @@ namespace bsdmn.Api
                             var address = values[3];
                             masternode.Address = address;
                             var portIndex = address.LastIndexOf(':');
+
                             if (portIndex > -1)
                             {
                                 masternode.IP = address.Substring(0, portIndex);
@@ -85,6 +86,7 @@ namespace bsdmn.Api
                             {
                                 vinIndex++;
                             }
+
                             vinIndexes[masternode.Vin] = vinIndex;
                             masternode.Index = vinIndex;
 
@@ -92,6 +94,7 @@ namespace bsdmn.Api
                             {
                                 addressIndex++;
                             }
+
                             addressIndexes[masternode.Address] = addressIndex;
                             var addressRanks = ranks.Where(r => r.address == masternode.Address).ToList();
                             if (addressRanks.Count > addressIndex) masternode.Rank = addressRanks[addressIndex].rank;
@@ -110,14 +113,20 @@ namespace bsdmn.Api
         }
 
         [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status and protocol.")]
-        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null)
+        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, string address = null, string vin = null, string pubkey = null, string nodeId = null,
+            [JsonRpcParameter(Description = "Searches address, vin, pubkey, and nodeId")] string searchText = null)
         {
-            var masternodes = All.Values.AsEnumerable();
+            var masternodes = All.Values
+                .Where(mn => status == null || mn.Status == status)
+                .Where(mn => protocol == null || mn.Protocol == protocol.Value)
+                .Where(mn => address == null || mn.Address.StartsWith(address))
+                .Where(mn => vin == null || mn.Vin.StartsWith(vin))
+                .Where(mn => pubkey == null || mn.PubKey.StartsWith(pubkey))
+                .Where(mn => nodeId == null || mn.NodeId.StartsWith(nodeId))
+                .Where(mn => searchText == null || mn.Address.StartsWith(searchText) || mn.Vin.StartsWith(searchText) || mn.PubKey.StartsWith(searchText) || mn.NodeId.StartsWith(searchText))
+                .ToList();
 
-            if (status != null) masternodes = masternodes.Where(mn => mn.Status == status).ToList();
-            if (protocol != null) masternodes = masternodes.Where(mn => mn.Protocol == protocol.Value);
-
-            return Task.FromResult(masternodes.ToList());
+            return Task.FromResult(masternodes);
         }
 
         [JsonRpcMethod(Description = "Gets a single masternode by address, vin, pubkey, or id. If multiple masternodes match returns the first one.")]
