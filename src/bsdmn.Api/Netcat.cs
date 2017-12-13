@@ -10,7 +10,7 @@ namespace bsdmn.Api
             var p = new Process();
             p.StartInfo.FileName = "nc";
             p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.Arguments = $"-zv -w 1 {ip} {port}";
+            p.StartInfo.Arguments = $"-z -vv -w 1 {ip} {port}";
             p.Start();
 
             var result = await p.StandardOutput.ReadToEndAsync();

@@ -116,23 +116,23 @@ namespace bsdmn.Api
             }
         }
 
-        public static async void PollConnections()
-        {
-            while (true)
-            {
-                foreach (var masternode in All.Values)
-                {
-                    try
-                    {
-                        masternode.ConnectionTest = await Netcat.TestConnectionAsync(masternode.IP, masternode.Port);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                }
-            }
-        }
+        //public static async void PollConnections()
+        //{
+        //    while (true)
+        //    {
+        //        foreach (var masternode in All.Values)
+        //        {
+        //            try
+        //            {
+        //                masternode.ConnectionTest = await Netcat.TestConnectionAsync(masternode.IP, masternode.Port);
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                Console.WriteLine(e);
+        //            }
+        //        }
+        //    }
+        //}
 
         [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status and protocol.")]
         public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, string address = null, string vin = null, string pubkey = null, string nodeId = null,
