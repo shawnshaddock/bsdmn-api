@@ -27,7 +27,8 @@ namespace bsdmn.Api
         public string ActiveDuration { get; set; }
         public int Rank { get; set; }
         public decimal? Balance { get; set; }
-        
+        public bool? CanConnect { get; set; }
+
         public static async void Poll()
         {
             while (true)
@@ -112,6 +113,24 @@ namespace bsdmn.Api
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(2));
+            }
+        }
+
+        public static async void PollConnections()
+        {
+            while (true)
+            {
+                foreach (var masternode in All.Values)
+                {
+                    try
+                    {
+                        masternode.CanConnect = await Netcat.CanConnectAsync(masternode.IP, masternode.Port);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
             }
         }
 
