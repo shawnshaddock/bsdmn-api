@@ -178,12 +178,13 @@ namespace bsdmn.Api
         }
 
         [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status and protocol.")]
-        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, string address = null, string vin = null, string pubkey = null, string nodeId = null,
+        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, bool? connected = null, string address = null, string vin = null, string pubkey = null, string nodeId = null,
             [JsonRpcParameter(Description = "Searches address, vin, pubkey, and nodeId")] string searchText = null)
         {
             var masternodes = All.Values
                 .Where(mn => status == null || mn.Status == status)
                 .Where(mn => protocol == null || mn.Protocol == protocol.Value)
+                .Where(mn => connected == null || mn.ConnectionTest?.Connected == connected)
                 .Where(mn => address == null || mn.Address.StartsWith(address))
                 .Where(mn => vin == null || mn.Vin.StartsWith(vin))
                 .Where(mn => pubkey == null || mn.PubKey.StartsWith(pubkey))
@@ -215,9 +216,9 @@ namespace bsdmn.Api
         }
 
         [JsonRpcMethod(Description = "Returns the total count of masternodes. Supports filtering by status and protocol.")]
-        public static async Task<int> GetCountAsync(string status = null, int? protocol = null)
+        public static async Task<int> GetCountAsync(string status = null, int? protocol = null, bool? connected = null)
         {
-            var masternodes = await ListAsync(status, protocol);
+            var masternodes = await ListAsync(status, protocol, connected);
             return masternodes.Count;
         }
     }
