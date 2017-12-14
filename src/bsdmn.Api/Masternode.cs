@@ -13,6 +13,7 @@ namespace bsdmn.Api
     public class Masternode
     {
         private static ConcurrentDictionary<string, Masternode>  All { get; } = new ConcurrentDictionary<string, Masternode>();
+        private static bool IsTestingConnections { get; set; }
 
         public string NodeId { get; set; }
         public string Vin { get; set; }
@@ -50,7 +51,7 @@ namespace bsdmn.Api
             }
         }
 
-        public static async void Poll()
+        public static async void StartMonitoring()
         {
             while (true)
             {
@@ -154,12 +155,17 @@ namespace bsdmn.Api
                     Console.WriteLine(e);
                 }
 
+                if (!IsTestingConnections) StartTestingConnections();
+
                 await Task.Delay(TimeSpan.FromMinutes(2));
             }
         }
 
-        public static async void TestConnections()
+        private static async void StartTestingConnections()
         {
+            if (IsTestingConnections) return;
+            IsTestingConnections = true;
+
             while (true)
             {
                 foreach (var masternode in All.Values)
@@ -167,7 +173,7 @@ namespace bsdmn.Api
                     await masternode.TestConnectionAsync();
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                await Task.Delay(TimeSpan.FromMinutes(2));
             }
         }
 
