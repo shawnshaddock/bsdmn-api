@@ -28,8 +28,27 @@ namespace bsdmn.Api
         public string ActiveDuration { get; set; }
         public int Rank { get; set; }
         public decimal? Balance { get; set; }
-        public bool CanConnect { get; set; }
+        public ConnectionTest ConnectionTest { get; set; }
         public DateTime LastRefresh { get; set; }
+
+        private async Task TestConnectionAsync()
+        {
+            ConnectionTest = await Tcp.TestConnectionAsync(IP, Port, TimeSpan.FromSeconds(2));
+        }
+
+        private async Task LoadBalanceAsync()
+        {
+            Balance = null;
+
+            try
+            {
+                Balance = await Cryptoid.GetBalanceAsync(PubKey);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
 
         public static async void Poll()
         {
@@ -145,19 +164,7 @@ namespace bsdmn.Api
             {
                 foreach (var masternode in All.Values)
                 {
-                    using (var client = new TcpClient())
-                    {
-                        try
-                        {
-                            var connectTask = client.ConnectAsync(masternode.IP, masternode.Port);
-                            await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(2)));
-                            masternode.CanConnect = connectTask.IsCompleted;
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
-                    }
+                    await masternode.TestConnectionAsync();
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(2));
@@ -194,16 +201,8 @@ namespace bsdmn.Api
 
             if (masternode != null)
             {
-                masternode.Balance = null;
-
-                try
-                {
-                    masternode.Balance = await Cryptoid.GetBalance(masternode.PubKey);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                await masternode.LoadBalanceAsync();
+                await masternode.TestConnectionAsync();
             }
 
             return masternode;

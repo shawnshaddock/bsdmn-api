@@ -16,7 +16,7 @@ namespace bsdmn.Api
             return result;
         }
 
-        public static async Task<decimal> GetBalance(string address)
+        public static async Task<decimal> GetBalanceAsync(string address)
         {
             var balanceString = await GetAsync($"q=getbalance&a={address}");
             return decimal.Parse(balanceString);
