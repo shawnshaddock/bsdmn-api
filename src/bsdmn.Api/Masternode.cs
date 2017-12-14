@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using HttpJsonRpc;
 using Newtonsoft.Json;
@@ -27,7 +28,7 @@ namespace bsdmn.Api
         public string ActiveDuration { get; set; }
         public int Rank { get; set; }
         public decimal? Balance { get; set; }
-        public string ConnectionTest { get; set; }
+        public bool CanConnect { get; set; }
         public DateTime LastRefresh { get; set; }
 
         public static async void Poll()
@@ -138,23 +139,30 @@ namespace bsdmn.Api
             }
         }
 
-        //public static async void PollConnections()
-        //{
-        //    while (true)
-        //    {
-        //        foreach (var masternode in All.Values)
-        //        {
-        //            try
-        //            {
-        //                masternode.ConnectionTest = await Netcat.TestConnectionAsync(masternode.IP, masternode.Port);
-        //            }
-        //            catch (Exception e)
-        //            {
-        //                Console.WriteLine(e);
-        //            }
-        //        }
-        //    }
-        //}
+        public static async void TestConnections()
+        {
+            while (true)
+            {
+                foreach (var masternode in All.Values)
+                {
+                    using (var client = new TcpClient())
+                    {
+                        try
+                        {
+                            var connectTask = client.ConnectAsync(masternode.IP, masternode.Port);
+                            await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(2)));
+                            masternode.CanConnect = connectTask.IsCompleted;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                    }
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(2));
+            }
+        }
 
         [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status and protocol.")]
         public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, string address = null, string vin = null, string pubkey = null, string nodeId = null,

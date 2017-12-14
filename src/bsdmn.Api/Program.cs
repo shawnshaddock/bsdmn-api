@@ -13,7 +13,7 @@ namespace bsdmn.Api
         static void Main(string[] args)
         {
             Masternode.Poll();
-            //Masternode.PollConnections();
+            Masternode.TestConnections();
 
             JsonRpc.OnReceivedRequest(c =>
             {
