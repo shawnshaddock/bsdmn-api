@@ -21,7 +21,7 @@ namespace bsdmn.Api
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    test.ErrorMessage = e.Message;
                 }
             }
 

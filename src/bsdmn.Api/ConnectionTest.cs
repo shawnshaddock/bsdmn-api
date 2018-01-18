@@ -6,5 +6,6 @@ namespace bsdmn.Api
     {
         public bool Connected { get; set; }
         public DateTime TestedAt { get; set; }
+        public string ErrorMessage { get; set; }
     }
 }
