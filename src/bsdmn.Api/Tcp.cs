@@ -18,6 +18,8 @@ namespace bsdmn.Api
                     var connectTask = client.ConnectAsync(ip, port);
                     await Task.WhenAny(connectTask, Task.Delay(timeout));
                     test.Connected = connectTask.IsCompleted;
+
+                    if (!test.Connected) test.ErrorMessage = "Connection timed out.";
                 }
                 catch (Exception e)
                 {
