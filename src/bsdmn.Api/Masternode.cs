@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -14,6 +15,7 @@ namespace bsdmn.Api
     {
         private static ConcurrentDictionary<string, Masternode>  All { get; } = new ConcurrentDictionary<string, Masternode>();
         private static bool IsTestingConnections { get; set; }
+        private static bool IsRetreivingLocations { get; set; }
 
         public string NodeId { get; set; }
         public string Vin { get; set; }
@@ -31,6 +33,7 @@ namespace bsdmn.Api
         public decimal? Balance { get; set; }
         public ConnectionTest ConnectionTest { get; set; }
         public DateTime LastRefresh { get; set; }
+        public Geolocation Location { get; set; }
 
         private async Task TestConnectionAsync()
         {
@@ -156,6 +159,7 @@ namespace bsdmn.Api
                 }
 
                 if (!IsTestingConnections) StartTestingConnections();
+                if (!IsRetreivingLocations) StartRetreivingLocations();
 
                 await Task.Delay(TimeSpan.FromMinutes(2));
             }
@@ -177,9 +181,34 @@ namespace bsdmn.Api
             }
         }
 
-        [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status and protocol.")]
-        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, bool? connected = null, string address = null, string vin = null, string pubkey = null, string nodeId = null,
-            [JsonRpcParameter(Description = "Searches address, vin, pubkey, and nodeId")] string searchText = null)
+        private static async void StartRetreivingLocations()
+        {
+            if (IsRetreivingLocations) return;
+            IsRetreivingLocations = true;
+
+            while (true)
+            {
+                foreach (var masternode in All.Values)
+                {
+                    if (masternode.Location != null) continue;
+
+                    try
+                    {
+                        masternode.Location = await Geolocation.GetAsync(masternode.IP);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                    }
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(2));
+            }
+        }
+
+        [JsonRpcMethod(Description = "Lists all masternodes. Supports filtering by status, protocol, connection, address, vin, pubkey, nodeId, countryCode, or countryName.")]
+        public static Task<List<Masternode>> ListAsync(string status = null, int? protocol = null, bool? connected = null, string address = null, string vin = null, string pubkey = null, string nodeId = null, string countryCode = null, string countryName = null,
+            [JsonRpcParameter(Description = "Searches address, vin, pubkey, nodeId, countryCode, and countryName")] string searchText = null)
         {
             var masternodes = All.Values
                 .Where(mn => status == null || mn.Status == status)
@@ -189,7 +218,9 @@ namespace bsdmn.Api
                 .Where(mn => vin == null || mn.Vin.StartsWith(vin))
                 .Where(mn => pubkey == null || mn.PubKey.StartsWith(pubkey))
                 .Where(mn => nodeId == null || mn.NodeId.StartsWith(nodeId))
-                .Where(mn => searchText == null || mn.Address.StartsWith(searchText) || mn.Vin.StartsWith(searchText) || mn.PubKey.StartsWith(searchText) || mn.NodeId.StartsWith(searchText))
+                .Where(mn => countryCode == null || (mn.Location?.CountryCode?.Equals(countryCode, StringComparison.InvariantCultureIgnoreCase) ?? false))
+                .Where(mn => countryName == null || (mn.Location?.CountryName?.Equals(countryName, StringComparison.InvariantCultureIgnoreCase) ?? false))
+                .Where(mn => searchText == null || mn.Address.StartsWith(searchText) || mn.Vin.StartsWith(searchText) || mn.PubKey.StartsWith(searchText) || mn.NodeId.StartsWith(searchText) || (mn.Location?.CountryCode?.Equals(searchText, StringComparison.InvariantCultureIgnoreCase) ?? false) || (mn.Location?.CountryName?.Equals(searchText, StringComparison.InvariantCultureIgnoreCase) ?? false))
                 .ToList();
 
             return Task.FromResult(masternodes);
