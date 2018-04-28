@@ -14,6 +14,20 @@ namespace bsdmn.Api
         {
             Masternode.StartMonitoring();
 
+            JsonRpc.OnReceivedHttpRequest(c =>
+            {
+                c.Response.AddHeader("Access-Control-Allow-Origin", "*");
+
+                if (c.Request.HttpMethod == "OPTIONS")
+                {
+                    c.Response.AddHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+                    c.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST");
+                    c.Response.Close();
+                }
+
+                return Task.CompletedTask;
+            });
+
             JsonRpc.OnReceivedRequest(c =>
             {
                 Console.WriteLine($"method: {c.Request?.Method} params: {c.Request?.Params}");
