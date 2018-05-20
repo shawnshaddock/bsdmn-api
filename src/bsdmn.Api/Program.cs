@@ -9,7 +9,6 @@ namespace bsdmn.Api
     {
         private static ManualResetEvent ResetEvent { get; } = new ManualResetEvent(false);
 
-
         static void Main(string[] args)
         {
             Masternode.StartMonitoring();
@@ -44,6 +43,8 @@ namespace bsdmn.Api
 
             Console.CancelKeyPress += (sender, eventArgs) => ResetEvent.Set();
             ResetEvent.WaitOne();
+
+            JsonRpc.Stop();
         }
     }
 }
